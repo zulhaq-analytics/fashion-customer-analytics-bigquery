@@ -218,3 +218,20 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- Project 4 safeguards ---
+# Raw and local data are never committed (Kaggle competition rules, section 7B)
+data/
+*.csv
+*.csv.gz
+*.zip
+*.parquet
+
+# Power BI: .pbix embeds the full dataset; PBIP cache also holds data
+*.pbix
+**/.pbi/cache.abf
+**/.pbi/localSettings.json
+
+# Secrets
+.env
+*.key
