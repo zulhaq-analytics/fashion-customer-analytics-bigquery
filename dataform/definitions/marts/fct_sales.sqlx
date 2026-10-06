@@ -1,0 +1,35 @@
+config {
+  type: "view",
+  schema: "hm_marts",
+  description: "Sales fact at order-line grain: one row per order and article. An order is approximated as one customer + one date + one channel (no receipt ID in source). Duplicate raw rows are collapsed into units. Prices are scaled, not real currency. Kept as a view to save sandbox storage.",
+  columns: {
+    order_id: "Surrogate order key: hash of customer_id + purchase_date + channel",
+    purchase_date: "Date of purchase (joins to dim_date.date)",
+    customer_id: "Customer (joins to dim_customer)",
+    article_id: "Article (joins to dim_product)",
+    channel: "Store or Online",
+    units: "Units of this article in this order",
+    unit_price: "Average scaled price per unit",
+    sales_amount: "Sum of scaled prices for this line (relative, not real currency)"
+  },
+  assertions: {
+    uniqueKey: ["order_id", "article_id"],
+    nonNull: ["order_id", "purchase_date", "customer_id", "article_id", "units", "sales_amount"]
+  }
+}
+
+SELECT
+  TO_HEX(MD5(CONCAT(customer_id, '|', CAST(purchase_date AS STRING), '|', channel))) AS order_id,
+  purchase_date,
+  customer_id,
+  article_id,
+  channel,
+  COUNT(*) AS units,
+  AVG(price) AS unit_price,
+  SUM(price) AS sales_amount
+FROM ${ref("stg_transactions")}
+GROUP BY
+  purchase_date,
+  customer_id,
+  article_id,
+  channel

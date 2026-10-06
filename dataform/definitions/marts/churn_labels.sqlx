@@ -1,0 +1,119 @@
+config {
+  type: "table",
+  schema: "hm_marts",
+  description: "Customer prediction dataset for churn and value models. One row per customer per cutoff date for customers active in the 365 days before the cutoff. Features use only data before the cutoff; labels look at the 90 days from the cutoff. Splits: train (Sep and Dec 2019), covid_lockdown (Mar 2020, excluded from training), test (Jun 2020, out-of-time validation), score (day after the last data date; labels unknown, used for live predictions).",
+  columns: {
+    cutoff_date: "Snapshot date; features look back from it, labels look forward",
+    data_split: "train, covid_lockdown, test or score",
+    customer_id: "Customer",
+    recency_days: "Days from last purchase to cutoff",
+    tenure_days: "Days from first purchase in the data window to cutoff",
+    orders_90d: "Orders in the 90 days before cutoff",
+    orders_365d: "Orders in the 365 days before cutoff",
+    units_365d: "Units in the 365 days before cutoff",
+    spend_365d: "Scaled spend in the 365 days before cutoff",
+    avg_order_value: "spend_365d / orders_365d",
+    online_share_365d: "Share of units bought online in the 365 days before cutoff",
+    distinct_articles_365d: "Distinct articles bought in the 365 days before cutoff",
+    churned_90d: "Churn label: TRUE if no purchase in the 90 days from the cutoff; null for the score split",
+    spend_next_90d: "Value label: scaled spend in the 90 days from the cutoff (0 if churned); null for the score split"
+  },
+  assertions: {
+    uniqueKey: ["cutoff_date", "customer_id"],
+    nonNull: ["cutoff_date", "data_split", "customer_id", "recency_days"],
+    rowConditions: [
+      "recency_days BETWEEN 1 AND 365",
+      "online_share_365d BETWEEN 0 AND 1",
+      "data_split = 'score' OR (churned_90d IS NOT NULL AND spend_next_90d IS NOT NULL)",
+      "data_split != 'score' OR (churned_90d IS NULL AND spend_next_90d IS NULL)",
+      "spend_next_90d IS NULL OR spend_next_90d >= 0",
+      "churned_90d IS NULL OR churned_90d = (spend_next_90d = 0)"
+    ]
+  }
+}
+
+WITH bounds AS (
+  SELECT DATE_ADD(MAX(purchase_date), INTERVAL 1 DAY) AS score_date
+  FROM ${ref("fct_sales")}
+),
+
+cutoffs AS (
+  SELECT cutoff_date, data_split
+  FROM UNNEST([
+    STRUCT(DATE '2019-09-01' AS cutoff_date, 'train' AS data_split),
+    STRUCT(DATE '2019-12-01', 'train'),
+    STRUCT(DATE '2020-03-01', 'covid_lockdown'),
+    STRUCT(DATE '2020-06-01', 'test')
+  ])
+  UNION ALL
+  SELECT score_date, 'score' FROM bounds
+),
+
+sales AS (
+  SELECT * FROM ${ref("fct_sales")}
+),
+
+history AS (
+  SELECT
+    c.cutoff_date,
+    c.data_split,
+    s.customer_id,
+    MAX(s.purchase_date) AS last_purchase_date,
+    COUNT(DISTINCT IF(s.purchase_date >= DATE_SUB(c.cutoff_date, INTERVAL 90 DAY), s.order_id, NULL)) AS orders_90d,
+    COUNT(DISTINCT s.order_id) AS orders_365d,
+    SUM(s.units) AS units_365d,
+    SUM(s.sales_amount) AS spend_365d,
+    SAFE_DIVIDE(SUM(IF(s.channel = 'Online', s.units, 0)), SUM(s.units)) AS online_share_365d,
+    COUNT(DISTINCT s.article_id) AS distinct_articles_365d
+  FROM cutoffs AS c
+  JOIN sales AS s
+    ON s.purchase_date < c.cutoff_date
+   AND s.purchase_date >= DATE_SUB(c.cutoff_date, INTERVAL 365 DAY)
+  GROUP BY c.cutoff_date, c.data_split, s.customer_id
+),
+
+future AS (
+  SELECT
+    c.cutoff_date,
+    s.customer_id,
+    SUM(s.sales_amount) AS spend_next_90d
+  FROM cutoffs AS c
+  JOIN sales AS s
+    ON s.purchase_date >= c.cutoff_date
+   AND s.purchase_date < DATE_ADD(c.cutoff_date, INTERVAL 90 DAY)
+  WHERE c.data_split != 'score'
+  GROUP BY c.cutoff_date, s.customer_id
+)
+
+SELECT
+  h.cutoff_date,
+  h.data_split,
+  h.customer_id,
+  DATE_DIFF(h.cutoff_date, h.last_purchase_date, DAY) AS recency_days,
+  DATE_DIFF(h.cutoff_date, d.first_purchase_date, DAY) AS tenure_days,
+  h.orders_90d,
+  h.orders_365d,
+  h.units_365d,
+  ROUND(h.spend_365d, 6) AS spend_365d,
+  ROUND(SAFE_DIVIDE(h.spend_365d, h.orders_365d), 6) AS avg_order_value,
+  ROUND(h.online_share_365d, 4) AS online_share_365d,
+  h.distinct_articles_365d,
+  d.age,
+  d.age_band,
+  d.club_member_status,
+  d.fashion_news_frequency,
+  d.is_fashion_news_subscriber,
+  CASE
+    WHEN h.data_split = 'score' THEN NULL
+    ELSE f.customer_id IS NULL
+  END AS churned_90d,
+  CASE
+    WHEN h.data_split = 'score' THEN NULL
+    ELSE ROUND(COALESCE(f.spend_next_90d, 0), 6)
+  END AS spend_next_90d
+FROM history AS h
+JOIN ${ref("dim_customer")} AS d
+  ON h.customer_id = d.customer_id
+LEFT JOIN future AS f
+  ON h.customer_id = f.customer_id
+ AND h.cutoff_date = f.cutoff_date

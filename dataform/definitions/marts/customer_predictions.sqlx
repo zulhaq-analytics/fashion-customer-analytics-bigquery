@@ -1,0 +1,93 @@
+config {
+  type: "table",
+  schema: "hm_marts",
+  description: "Live predictions for customers active in the 365 days before the score date (day after the last data date). Combines churn_model and value_model. value_at_risk = churn_probability x quarterly spend at stake (past 365-day spend / 4); past spend is used because the spend forecast already includes churn.",
+  columns: {
+    customer_id: "Customer (primary key)",
+    score_date: "Date the predictions are made as of",
+    churn_probability: "Probability of no purchase in the next 90 days",
+    churn_risk_band: "High (>= 0.7), Medium (>= 0.4) or Low",
+    predicted_spend_next_90d: "Forecast scaled spend in the next 90 days, floored at 0",
+    quarterly_spend_at_stake: "Past 365-day scaled spend divided by 4",
+    value_at_risk: "churn_probability x quarterly_spend_at_stake",
+    value_at_risk_decile: "1-10 by value_at_risk; 10 = top 10% (highest priority for retention)",
+    rfm_segment: "RFM segment from customer_rfm_segments"
+  },
+  assertions: {
+    uniqueKey: ["customer_id"],
+    nonNull: ["customer_id", "churn_probability", "predicted_spend_next_90d", "value_at_risk"],
+    rowConditions: [
+      "churn_probability BETWEEN 0 AND 1",
+      "predicted_spend_next_90d >= 0",
+      "value_at_risk >= 0"
+    ]
+  }
+}
+
+WITH score_rows AS (
+  SELECT *
+  FROM ${ref("churn_labels")}
+  WHERE data_split = 'score'
+),
+
+churn_scores AS (
+  SELECT
+    customer_id,
+    (SELECT p.prob FROM UNNEST(predicted_churned_90d_probs) AS p WHERE p.label = TRUE) AS churn_probability
+  FROM ML.PREDICT(MODEL ${ref("churn_model")}, (SELECT * FROM score_rows))
+),
+
+value_scores AS (
+  SELECT
+    customer_id,
+    GREATEST(0, predicted_spend_next_90d) AS predicted_spend_next_90d
+  FROM ML.PREDICT(MODEL ${ref("value_model")}, (SELECT * FROM score_rows))
+),
+
+combined AS (
+  SELECT
+    s.customer_id,
+    s.cutoff_date AS score_date,
+    s.recency_days,
+    s.orders_365d,
+    s.spend_365d,
+    s.online_share_365d,
+    s.age_band,
+    s.club_member_status,
+    s.fashion_news_frequency,
+    c.churn_probability,
+    v.predicted_spend_next_90d,
+    s.spend_365d / 4 AS quarterly_spend_at_stake,
+    c.churn_probability * (s.spend_365d / 4) AS value_at_risk
+  FROM score_rows AS s
+  JOIN churn_scores AS c
+    ON s.customer_id = c.customer_id
+  JOIN value_scores AS v
+    ON s.customer_id = v.customer_id
+)
+
+SELECT
+  cb.customer_id,
+  cb.score_date,
+  cb.recency_days,
+  cb.orders_365d,
+  cb.spend_365d,
+  cb.online_share_365d,
+  cb.age_band,
+  cb.club_member_status,
+  cb.fashion_news_frequency,
+  ROUND(cb.churn_probability, 4) AS churn_probability,
+  CASE
+    WHEN cb.churn_probability >= 0.7 THEN 'High'
+    WHEN cb.churn_probability >= 0.4 THEN 'Medium'
+    ELSE 'Low'
+  END AS churn_risk_band,
+  ROUND(cb.predicted_spend_next_90d, 6) AS predicted_spend_next_90d,
+  ROUND(cb.quarterly_spend_at_stake, 6) AS quarterly_spend_at_stake,
+  ROUND(cb.value_at_risk, 6) AS value_at_risk,
+  NTILE(10) OVER (ORDER BY cb.value_at_risk) AS value_at_risk_decile,
+  r.rfm_segment,
+  r.segment_sort_order
+FROM combined AS cb
+LEFT JOIN ${ref("customer_rfm_segments")} AS r
+  ON cb.customer_id = r.customer_id

@@ -1,0 +1,50 @@
+config {
+  type: "view",
+  schema: "hm_staging",
+  description: "One row per H&M article (a specific item in a specific color). Cleans raw articles: readable names, trimmed text, Unknown for blanks.",
+  columns: {
+    article_id: "Article identifier, 10 digits with leading zero (primary key)",
+    product_code: "Style identifier, first 7 digits of article_id (one style, many colors)",
+    product_name: "Product name",
+    product_type: "Product type, e.g. Trousers, Sweater",
+    product_group: "Product group, e.g. Garment Upper body",
+    graphical_appearance: "Pattern, e.g. Solid, Stripe",
+    color_group: "Color group, e.g. Black, Light Blue",
+    perceived_color_value: "Color tone, e.g. Dark, Light",
+    perceived_color_master: "Main color family",
+    department_code: "Department number (department names repeat across sections)",
+    department: "Department name",
+    index_name: "Index, e.g. Ladieswear, Menswear, Divided",
+    index_group: "Top-level group, e.g. Ladieswear, Baby/Children, Sport",
+    section: "Section, e.g. Womens Everyday Basics",
+    garment_group: "Garment group, e.g. Jersey Basic, Knitwear",
+    description: "Free-text product description"
+  },
+  assertions: {
+    uniqueKey: ["article_id"],
+    nonNull: ["article_id", "product_code"]
+  }
+}
+
+WITH source AS (
+  SELECT * FROM ${ref("articles")}
+)
+
+SELECT
+  TRIM(article_id) AS article_id,
+  TRIM(product_code) AS product_code,
+  COALESCE(NULLIF(TRIM(prod_name), ''), 'Unknown') AS product_name,
+  COALESCE(NULLIF(TRIM(product_type_name), ''), 'Unknown') AS product_type,
+  COALESCE(NULLIF(TRIM(product_group_name), ''), 'Unknown') AS product_group,
+  COALESCE(NULLIF(TRIM(graphical_appearance_name), ''), 'Unknown') AS graphical_appearance,
+  COALESCE(NULLIF(TRIM(colour_group_name), ''), 'Unknown') AS color_group,
+  COALESCE(NULLIF(TRIM(perceived_colour_value_name), ''), 'Unknown') AS perceived_color_value,
+  COALESCE(NULLIF(TRIM(perceived_colour_master_name), ''), 'Unknown') AS perceived_color_master,
+  TRIM(department_no) AS department_code,
+  COALESCE(NULLIF(TRIM(department_name), ''), 'Unknown') AS department,
+  COALESCE(NULLIF(TRIM(index_name), ''), 'Unknown') AS index_name,
+  COALESCE(NULLIF(TRIM(index_group_name), ''), 'Unknown') AS index_group,
+  COALESCE(NULLIF(TRIM(section_name), ''), 'Unknown') AS section,
+  COALESCE(NULLIF(TRIM(garment_group_name), ''), 'Unknown') AS garment_group,
+  NULLIF(TRIM(detail_desc), '') AS description
+FROM source

@@ -1,0 +1,39 @@
+config {
+  type: "view",
+  schema: "hm_staging",
+  description: "One row per item purchased (duplicate rows are multiple units of the same item, kept intentionally). Prices are scaled by H&M and are not real currency.",
+  columns: {
+    purchase_date: "Date of purchase",
+    customer_id: "Hashed customer identifier (joins to stg_customers)",
+    article_id: "Article identifier (joins to stg_articles)",
+    product_code: "Style identifier, first 7 digits of article_id",
+    price: "Scaled price per unit (relative, not real currency)",
+    channel_code: "Raw sales channel code: 1 or 2",
+    channel: "Store (code 1) or Online (code 2); community-established mapping, not officially documented by H&M"
+  },
+  assertions: {
+    nonNull: ["purchase_date", "customer_id", "article_id", "price"],
+    rowConditions: [
+      "price > 0",
+      "channel_code IN (1, 2)"
+    ]
+  }
+}
+
+WITH source AS (
+  SELECT * FROM ${ref("transactions")}
+)
+
+SELECT
+  t_dat AS purchase_date,
+  TRIM(customer_id) AS customer_id,
+  TRIM(article_id) AS article_id,
+  SUBSTR(TRIM(article_id), 1, 7) AS product_code,
+  price,
+  sales_channel_id AS channel_code,
+  CASE sales_channel_id
+    WHEN 1 THEN 'Store'
+    WHEN 2 THEN 'Online'
+    ELSE 'Unknown'
+  END AS channel
+FROM source

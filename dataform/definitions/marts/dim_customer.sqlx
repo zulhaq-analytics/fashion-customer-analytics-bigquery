@@ -1,0 +1,64 @@
+config {
+  type: "table",
+  schema: "hm_marts",
+  description: "One row per customer: profile attributes plus lifetime purchase summary. An order is approximated as one customer + one date + one channel (no receipt ID in source). First purchase is the first seen in the data window (Sep 2018 onward).",
+  columns: {
+    customer_id: "Hashed customer identifier (primary key)",
+    first_purchase_date: "First purchase seen in the data window",
+    last_purchase_date: "Most recent purchase",
+    cohort_month: "Month of first purchase (acquisition cohort)",
+    items_purchased: "Total units bought",
+    orders: "Distinct customer + date + channel combinations",
+    total_spend: "Sum of scaled prices (relative, not real currency)",
+    channel_preference: "Store only, Online only, Omnichannel, or No purchases",
+    has_purchased: "Customer has at least one purchase in the data"
+  },
+  assertions: {
+    uniqueKey: ["customer_id"],
+    nonNull: ["customer_id", "channel_preference"]
+  }
+}
+
+WITH customers AS (
+  SELECT * FROM ${ref("stg_customers")}
+),
+
+purchase_summary AS (
+  SELECT
+    customer_id,
+    MIN(purchase_date) AS first_purchase_date,
+    MAX(purchase_date) AS last_purchase_date,
+    COUNT(*) AS items_purchased,
+    COUNT(DISTINCT CONCAT(CAST(purchase_date AS STRING), '|', channel)) AS orders,
+    SUM(price) AS total_spend,
+    COUNTIF(channel = 'Online') AS online_items,
+    COUNTIF(channel = 'Store') AS store_items
+  FROM ${ref("stg_transactions")}
+  GROUP BY customer_id
+)
+
+SELECT
+  c.customer_id,
+  c.is_fashion_news_subscriber,
+  c.is_active,
+  c.club_member_status,
+  c.fashion_news_frequency,
+  c.age,
+  c.age_band,
+  c.postal_code,
+  p.first_purchase_date,
+  p.last_purchase_date,
+  DATE_TRUNC(p.first_purchase_date, MONTH) AS cohort_month,
+  COALESCE(p.items_purchased, 0) AS items_purchased,
+  COALESCE(p.orders, 0) AS orders,
+  ROUND(COALESCE(p.total_spend, 0), 4) AS total_spend,
+  CASE
+    WHEN p.customer_id IS NULL THEN 'No purchases'
+    WHEN p.online_items = 0 THEN 'Store only'
+    WHEN p.store_items = 0 THEN 'Online only'
+    ELSE 'Omnichannel'
+  END AS channel_preference,
+  p.customer_id IS NOT NULL AS has_purchased
+FROM customers AS c
+LEFT JOIN purchase_summary AS p
+  ON c.customer_id = p.customer_id

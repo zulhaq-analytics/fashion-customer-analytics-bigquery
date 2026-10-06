@@ -1,0 +1,46 @@
+config {
+  type: "table",
+  schema: "hm_marts",
+  description: "One row per month with correctly de-duplicated customer counts (active, new, returning, online) plus orders, units and scaled spend. First and last months are partial in the data window.",
+  columns: {
+    activity_month: "First day of the month",
+    active_customers: "Distinct customers who purchased in the month",
+    new_customers: "Customers whose first purchase in the data window was this month",
+    returning_customers: "Active customers who had purchased in an earlier month",
+    online_customers: "Customers with at least one online unit in the month",
+    store_customers: "Customers with at least one store unit in the month",
+    is_partial_month: "First or last month of the data window"
+  },
+  assertions: {
+    uniqueKey: ["activity_month"],
+    rowConditions: [
+      "active_customers = new_customers + returning_customers"
+    ]
+  }
+}
+
+WITH activity AS (
+  SELECT * FROM ${ref("customer_monthly_activity")}
+),
+
+bounds AS (
+  SELECT
+    MIN(activity_month) AS first_month,
+    MAX(activity_month) AS last_month
+  FROM activity
+)
+
+SELECT
+  a.activity_month,
+  COUNT(*) AS active_customers,
+  COUNTIF(a.months_since_first_purchase = 0) AS new_customers,
+  COUNTIF(a.months_since_first_purchase > 0) AS returning_customers,
+  COUNTIF(a.online_units > 0) AS online_customers,
+  COUNTIF(a.store_units > 0) AS store_customers,
+  SUM(a.orders) AS orders,
+  SUM(a.units) AS units,
+  ROUND(SUM(a.sales_amount), 6) AS sales_amount,
+  a.activity_month IN (b.first_month, b.last_month) AS is_partial_month
+FROM activity AS a
+CROSS JOIN bounds AS b
+GROUP BY a.activity_month, b.first_month, b.last_month

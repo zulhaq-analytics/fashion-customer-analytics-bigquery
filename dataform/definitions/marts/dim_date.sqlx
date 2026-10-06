@@ -1,0 +1,50 @@
+config {
+  type: "table",
+  schema: "hm_marts",
+  description: "One row per calendar day covering the purchase data window. Includes calendar, ISO week, H&M fiscal year (December to November) and a COVID period flag (from March 1, 2020).",
+  columns: {
+    date: "Calendar date (primary key)",
+    fiscal_year: "H&M fiscal year, named by the year it ends (FY2019 = Dec 2018 to Nov 2019)",
+    fiscal_quarter: "H&M fiscal quarter: Q1 = Dec to Feb",
+    covid_period: "Pre-COVID (before Mar 1, 2020) or COVID (from Mar 1, 2020)"
+  },
+  assertions: {
+    uniqueKey: ["date"],
+    nonNull: ["date"]
+  }
+}
+
+WITH bounds AS (
+  SELECT
+    MIN(purchase_date) AS start_date,
+    MAX(purchase_date) AS end_date
+  FROM ${ref("stg_transactions")}
+),
+
+days AS (
+  SELECT day AS date
+  FROM bounds, UNNEST(GENERATE_DATE_ARRAY(start_date, end_date)) AS day
+)
+
+SELECT
+  date,
+  EXTRACT(YEAR FROM date) AS year,
+  EXTRACT(QUARTER FROM date) AS quarter_number,
+  CONCAT('Q', CAST(EXTRACT(QUARTER FROM date) AS STRING)) AS quarter,
+  EXTRACT(MONTH FROM date) AS month_number,
+  FORMAT_DATE('%b', date) AS month_short,
+  FORMAT_DATE('%B', date) AS month_name,
+  DATE_TRUNC(date, MONTH) AS month_start,
+  FORMAT_DATE('%Y-%m', date) AS year_month,
+  DATE_TRUNC(date, ISOWEEK) AS week_start,
+  EXTRACT(ISOWEEK FROM date) AS iso_week,
+  EXTRACT(DAYOFWEEK FROM date) AS day_of_week_number,
+  FORMAT_DATE('%A', date) AS day_name,
+  EXTRACT(DAYOFWEEK FROM date) IN (1, 7) AS is_weekend,
+  EXTRACT(YEAR FROM DATE_ADD(date, INTERVAL 1 MONTH)) AS fiscal_year,
+  CONCAT('Q', CAST(CAST(CEIL((MOD(EXTRACT(MONTH FROM date), 12) + 1) / 3) AS INT64) AS STRING)) AS fiscal_quarter,
+  CASE
+    WHEN date < DATE '2020-03-01' THEN 'Pre-COVID'
+    ELSE 'COVID'
+  END AS covid_period
+FROM days

@@ -1,0 +1,31 @@
+config {
+  type: "operations",
+  schema: "hm_marts",
+  hasOutput: true,
+  description: "BigQuery ML linear regression predicting scaled spend in the next 90 days. Same features and train split as churn_model; evaluated on the Jun 2020 test split."
+}
+
+CREATE OR REPLACE MODEL ${self()}
+OPTIONS (
+  model_type = 'LINEAR_REG',
+  input_label_cols = ['spend_next_90d'],
+  data_split_method = 'NO_SPLIT',
+  enable_global_explain = TRUE
+) AS
+SELECT
+  recency_days,
+  tenure_days,
+  orders_90d,
+  orders_365d,
+  units_365d,
+  spend_365d,
+  avg_order_value,
+  online_share_365d,
+  distinct_articles_365d,
+  age,
+  club_member_status,
+  fashion_news_frequency,
+  is_fashion_news_subscriber,
+  spend_next_90d
+FROM ${ref("churn_labels")}
+WHERE data_split = 'train'

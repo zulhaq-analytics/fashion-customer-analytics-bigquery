@@ -1,0 +1,100 @@
+config {
+  type: "table",
+  schema: "hm_marts",
+  description: "RFM segmentation as of the last date in the data. Scores 1-5 use PERCENT_RANK so tied customers share the lowest score of their tie (one-order customers score F = 1). FM score is the rounded average of frequency and monetary scores.",
+  columns: {
+    customer_id: "Customer (primary key)",
+    snapshot_date: "Date the RFM scores are measured at (last date in the data)",
+    recency_days: "Days since last purchase at snapshot date",
+    frequency_orders: "Lifetime orders",
+    monetary_spend: "Lifetime scaled spend (relative, not real currency)",
+    r_score: "Recency score 1-5 (5 = most recent)",
+    f_score: "Frequency score 1-5 (5 = most orders)",
+    m_score: "Monetary score 1-5 (5 = highest spend)",
+    fm_score: "Rounded average of f_score and m_score",
+    rfm_segment: "Named segment",
+    segment_sort_order: "Sort order for reports, 1 = Champions"
+  },
+  assertions: {
+    uniqueKey: ["customer_id"],
+    nonNull: ["customer_id", "r_score", "f_score", "m_score", "rfm_segment"],
+    rowConditions: [
+      "r_score BETWEEN 1 AND 5",
+      "f_score BETWEEN 1 AND 5",
+      "m_score BETWEEN 1 AND 5"
+    ]
+  }
+}
+
+WITH base AS (
+  SELECT
+    customer_id,
+    last_purchase_date,
+    orders AS frequency_orders,
+    total_spend AS monetary_spend
+  FROM ${ref("dim_customer")}
+  WHERE has_purchased
+),
+
+snapshot AS (
+  SELECT MAX(last_purchase_date) AS snapshot_date FROM base
+),
+
+measured AS (
+  SELECT
+    b.customer_id,
+    s.snapshot_date,
+    DATE_DIFF(s.snapshot_date, b.last_purchase_date, DAY) AS recency_days,
+    b.frequency_orders,
+    b.monetary_spend
+  FROM base AS b
+  CROSS JOIN snapshot AS s
+),
+
+scored AS (
+  SELECT
+    *,
+    GREATEST(1, LEAST(5, CAST(CEIL(PERCENT_RANK() OVER (ORDER BY recency_days DESC) * 5) AS INT64))) AS r_score,
+    GREATEST(1, LEAST(5, CAST(CEIL(PERCENT_RANK() OVER (ORDER BY frequency_orders) * 5) AS INT64))) AS f_score,
+    GREATEST(1, LEAST(5, CAST(CEIL(PERCENT_RANK() OVER (ORDER BY monetary_spend) * 5) AS INT64))) AS m_score
+  FROM measured
+),
+
+combined AS (
+  SELECT
+    *,
+    CAST(ROUND((f_score + m_score) / 2) AS INT64) AS fm_score
+  FROM scored
+)
+
+SELECT
+  customer_id,
+  snapshot_date,
+  recency_days,
+  frequency_orders,
+  ROUND(monetary_spend, 6) AS monetary_spend,
+  r_score,
+  f_score,
+  m_score,
+  fm_score,
+  CASE
+    WHEN r_score >= 4 AND fm_score = 5 THEN 'Champions'
+    WHEN r_score >= 3 AND fm_score >= 4 THEN 'Loyal'
+    WHEN r_score <= 2 AND fm_score >= 4 THEN 'At risk'
+    WHEN r_score >= 4 AND fm_score >= 2 THEN 'Potential loyalists'
+    WHEN r_score >= 4 THEN 'New or occasional'
+    WHEN r_score = 3 THEN 'Needs attention'
+    WHEN r_score <= 2 AND fm_score >= 2 THEN 'Hibernating'
+    ELSE 'Lost'
+  END AS rfm_segment,
+  CASE
+    WHEN r_score >= 4 AND fm_score = 5 THEN 1
+    WHEN r_score >= 3 AND fm_score >= 4 THEN 2
+    WHEN r_score >= 4 AND fm_score >= 2 THEN 3
+    WHEN r_score >= 4 THEN 4
+    WHEN r_score = 3 THEN 5
+    WHEN r_score <= 2 AND fm_score >= 4 THEN 6
+    WHEN r_score <= 2 AND fm_score >= 2 THEN 7
+    ELSE 8
+  END AS segment_sort_order
+FROM combined

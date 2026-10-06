@@ -1,0 +1,55 @@
+config {
+  type: "view",
+  schema: "hm_marts",
+  description: "One row per customer per month in which the customer purchased. Base for cohorts, retention and churn. Note: Sep 2018 and Sep 2020 are partial months in the data window.",
+  columns: {
+    customer_id: "Customer",
+    activity_month: "First day of the month with purchases",
+    cohort_month: "Month of the customer's first purchase in the data window",
+    months_since_first_purchase: "0 = cohort month, 1 = next month, etc.",
+    months_since_previous_purchase: "Gap in months since the previous active month; null for the first active month",
+    orders: "Orders in the month (customer + date + channel)",
+    units: "Units bought in the month",
+    sales_amount: "Scaled spend in the month (relative, not real currency)",
+    online_units: "Units bought online",
+    store_units: "Units bought in store"
+  },
+  assertions: {
+    uniqueKey: ["customer_id", "activity_month"],
+    nonNull: ["customer_id", "activity_month", "cohort_month", "months_since_first_purchase"]
+  }
+}
+
+WITH monthly AS (
+  SELECT
+    customer_id,
+    DATE_TRUNC(purchase_date, MONTH) AS activity_month,
+    COUNT(DISTINCT order_id) AS orders,
+    SUM(units) AS units,
+    SUM(sales_amount) AS sales_amount,
+    SUM(IF(channel = 'Online', units, 0)) AS online_units,
+    SUM(IF(channel = 'Store', units, 0)) AS store_units
+  FROM ${ref("fct_sales")}
+  GROUP BY customer_id, activity_month
+),
+
+with_cohort AS (
+  SELECT
+    *,
+    MIN(activity_month) OVER (PARTITION BY customer_id) AS cohort_month,
+    LAG(activity_month) OVER (PARTITION BY customer_id ORDER BY activity_month) AS previous_activity_month
+  FROM monthly
+)
+
+SELECT
+  customer_id,
+  activity_month,
+  cohort_month,
+  DATE_DIFF(activity_month, cohort_month, MONTH) AS months_since_first_purchase,
+  DATE_DIFF(activity_month, previous_activity_month, MONTH) AS months_since_previous_purchase,
+  orders,
+  units,
+  ROUND(sales_amount, 6) AS sales_amount,
+  online_units,
+  store_units
+FROM with_cohort

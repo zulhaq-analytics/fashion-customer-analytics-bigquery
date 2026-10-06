@@ -1,0 +1,72 @@
+config {
+  type: "table",
+  schema: "hm_marts",
+  description: "Cohort retention: one row per acquisition cohort month and months since first purchase. Cohorts before Mar 2019 are labeled Warm-up because the data window starts Sep 2018 and those cohorts mix in pre-existing customers. The last data month is partial.",
+  columns: {
+    cohort_month: "Month of first purchase in the data window",
+    months_since_first_purchase: "0 = cohort month",
+    activity_month: "Calendar month being measured",
+    cohort_size: "Customers whose first purchase was in the cohort month",
+    active_customers: "Cohort customers who purchased in the activity month",
+    retention_rate: "active_customers / cohort_size",
+    cohort_type: "Warm-up (before Mar 2019), Standard, or Partial month (last data month)",
+    is_partial_activity_month: "Activity month is the last, partial month of the data window"
+  },
+  assertions: {
+    uniqueKey: ["cohort_month", "months_since_first_purchase"],
+    nonNull: ["cohort_month", "months_since_first_purchase", "cohort_size", "active_customers"],
+    rowConditions: [
+      "retention_rate BETWEEN 0 AND 1",
+      "months_since_first_purchase > 0 OR retention_rate = 1"
+    ]
+  }
+}
+
+WITH activity AS (
+  SELECT * FROM ${ref("customer_monthly_activity")}
+),
+
+bounds AS (
+  SELECT MAX(activity_month) AS last_month FROM activity
+),
+
+cohort_sizes AS (
+  SELECT
+    cohort_month,
+    COUNT(DISTINCT customer_id) AS cohort_size
+  FROM activity
+  WHERE months_since_first_purchase = 0
+  GROUP BY cohort_month
+),
+
+retention AS (
+  SELECT
+    cohort_month,
+    months_since_first_purchase,
+    COUNT(DISTINCT customer_id) AS active_customers,
+    SUM(orders) AS orders,
+    SUM(sales_amount) AS sales_amount
+  FROM activity
+  GROUP BY cohort_month, months_since_first_purchase
+)
+
+SELECT
+  r.cohort_month,
+  r.months_since_first_purchase,
+  DATE_ADD(r.cohort_month, INTERVAL r.months_since_first_purchase MONTH) AS activity_month,
+  s.cohort_size,
+  r.active_customers,
+  ROUND(SAFE_DIVIDE(r.active_customers, s.cohort_size), 6) AS retention_rate,
+  r.orders,
+  ROUND(r.sales_amount, 6) AS sales_amount,
+  ROUND(SAFE_DIVIDE(r.sales_amount, s.cohort_size), 6) AS sales_per_cohort_customer,
+  CASE
+    WHEN r.cohort_month = b.last_month THEN 'Partial month'
+    WHEN r.cohort_month < DATE '2019-03-01' THEN 'Warm-up'
+    ELSE 'Standard'
+  END AS cohort_type,
+  DATE_ADD(r.cohort_month, INTERVAL r.months_since_first_purchase MONTH) = b.last_month AS is_partial_activity_month
+FROM retention AS r
+JOIN cohort_sizes AS s
+  ON r.cohort_month = s.cohort_month
+CROSS JOIN bounds AS b

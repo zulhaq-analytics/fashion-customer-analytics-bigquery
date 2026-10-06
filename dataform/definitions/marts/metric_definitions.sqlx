@@ -1,0 +1,135 @@
+config {
+  type: "table",
+  schema: "hm_marts",
+  description: "Semantic layer: one row per official metric with its business definition, SQL expression, source table and caveats. Used by Power BI measure design and as grounding for the AI analyst.",
+  columns: {
+    metric_name: "Machine name (primary key)",
+    display_name: "Name shown in reports",
+    description: "Plain-English definition",
+    sql_expression: "Exact SQL expression against the source table",
+    source_table: "Table in hm_marts the metric is computed from",
+    aggregation_notes: "How the metric may be aggregated",
+    caveats: "Known limitations to state when reporting"
+  },
+  assertions: {
+    uniqueKey: ["metric_name"],
+    nonNull: ["metric_name", "display_name", "description", "sql_expression", "source_table"]
+  }
+}
+
+SELECT *
+FROM UNNEST([
+  STRUCT(
+    'active_customers' AS metric_name,
+    'Active customers' AS display_name,
+    'Distinct customers with at least one purchase in the period.' AS description,
+    'SUM(active_customers) for a single month; never sum across months' AS sql_expression,
+    'agg_monthly_kpis' AS source_table,
+    'Not additive across months: a customer active in two months is counted in each.' AS aggregation_notes,
+    'Sep 2018 and Sep 2020 are partial months.' AS caveats
+  ),
+  STRUCT(
+    'new_customers', 'New customers',
+    'Customers whose first purchase in the data window falls in the period.',
+    'SUM(new_customers)',
+    'agg_monthly_kpis',
+    'Additive across months.',
+    'Before Mar 2019, many "new" customers are existing customers first seen in the data window (warm-up period).'
+  ),
+  STRUCT(
+    'returning_customers', 'Returning customers',
+    'Active customers who had purchased in an earlier month.',
+    'SUM(returning_customers) for a single month',
+    'agg_monthly_kpis',
+    'Not additive across months.',
+    'Early months understate returning customers because history before Sep 2018 is not available.'
+  ),
+  STRUCT(
+    'orders', 'Orders',
+    'Distinct combinations of customer, purchase date and channel.',
+    'SUM(orders)',
+    'agg_monthly_kpis',
+    'Additive across months.',
+    'Approximation: the source has no receipt ID, so multiple same-day visits in one channel count as one order.'
+  ),
+  STRUCT(
+    'units', 'Units sold',
+    'Number of items purchased; each raw transaction row is one unit.',
+    'SUM(units)',
+    'agg_sales_daily',
+    'Fully additive.',
+    'None.'
+  ),
+  STRUCT(
+    'sales_amount', 'Spend (scaled)',
+    'Sum of item prices as provided by H&M.',
+    'SUM(sales_amount)',
+    'agg_sales_daily',
+    'Fully additive.',
+    'Prices are scaled by H&M and are not real currency; report as relative spend or shares, never as revenue.'
+  ),
+  STRUCT(
+    'avg_order_value', 'Average order value (scaled)',
+    'Average scaled spend per order.',
+    'SAFE_DIVIDE(SUM(sales_amount), SUM(orders))',
+    'agg_monthly_kpis',
+    'Ratio: compute from summed components, never average the ratio.',
+    'Scaled prices; order is approximated.'
+  ),
+  STRUCT(
+    'online_unit_share', 'Online share of units',
+    'Share of units bought online.',
+    "SAFE_DIVIDE(SUM(IF(channel = 'Online', units, 0)), SUM(units))",
+    'agg_sales_daily',
+    'Ratio: compute from summed components.',
+    'Channel mapping (1 = Store, 2 = Online) is community-established, not officially documented by H&M.'
+  ),
+  STRUCT(
+    'retention_rate', 'Cohort retention rate',
+    'Share of a cohort that purchased again N months after their first purchase month.',
+    'SAFE_DIVIDE(SUM(active_customers), SUM(cohort_size)) filtered to one months_since_first_purchase',
+    'cohort_retention',
+    'Compute per cohort and month offset; when combining cohorts, divide summed active customers by summed cohort size.',
+    'Exclude Warm-up cohorts (before Mar 2019) from headline retention; the last activity month is partial.'
+  ),
+  STRUCT(
+    'churn_rate_90d', 'Churn rate (90 days)',
+    'Share of customers active in the prior 365 days who made no purchase in the 90 days after a cutoff date.',
+    'AVG(IF(churned_90d, 1, 0)) for one cutoff_date',
+    'churn_labels',
+    'Compute per cutoff date; do not pool cutoffs.',
+    'Mar 2020 cutoff overlaps COVID lockdown store closures.'
+  ),
+  STRUCT(
+    'churn_probability', 'Predicted churn probability',
+    'BigQuery ML logistic regression estimate that a customer makes no purchase in the next 90 days.',
+    'AVG(churn_probability)',
+    'customer_predictions',
+    'Average across customers gives expected churn rate for the group.',
+    'Model test ROC AUC 0.80 on the Jun 2020 out-of-time split; scored as of the day after the last data date.'
+  ),
+  STRUCT(
+    'value_at_risk', 'Value at risk (scaled)',
+    "Expected spend lost to churn: churn probability multiplied by the customer's quarterly spend over the past year.",
+    'SUM(value_at_risk)',
+    'customer_predictions',
+    'Additive across customers.',
+    'Scaled prices; uses past spend rather than the spend forecast to avoid counting churn twice.'
+  ),
+  STRUCT(
+    'predicted_spend_next_90d', 'Forecast spend, next 90 days (scaled)',
+    'BigQuery ML linear regression forecast of spend in the next 90 days, floored at zero.',
+    'SUM(predicted_spend_next_90d)',
+    'customer_predictions',
+    'Additive across customers; reliable for totals and ranking, rough for individuals.',
+    'Model test R-squared 0.36; 27.5 percent lower error than predicting the average.'
+  ),
+  STRUCT(
+    'champion_spend_share', 'Champions share of spend',
+    'Share of lifetime scaled spend generated by customers in the Champions RFM segment.',
+    "SAFE_DIVIDE(SUM(IF(rfm_segment = 'Champions', monetary_spend, 0)), SUM(monetary_spend))",
+    'customer_rfm_segments',
+    'Ratio: compute from summed components.',
+    'RFM measured as of the last date in the data; scaled prices.'
+  )
+])

@@ -1,0 +1,13 @@
+config {
+  type: "operations",
+  description: "Extends the expiration of each raw table to 59 days from now, so the BigQuery sandbox 60-day limit never deletes them. Changes metadata only: no data copied, no storage used. Runs with the monthly scheduled build."
+}
+
+ALTER TABLE ${ref("articles")}
+SET OPTIONS (expiration_timestamp = TIMESTAMP_ADD(CURRENT_TIMESTAMP(), INTERVAL 59 DAY));
+
+ALTER TABLE ${ref("customers")}
+SET OPTIONS (expiration_timestamp = TIMESTAMP_ADD(CURRENT_TIMESTAMP(), INTERVAL 59 DAY));
+
+ALTER TABLE ${ref("transactions")}
+SET OPTIONS (expiration_timestamp = TIMESTAMP_ADD(CURRENT_TIMESTAMP(), INTERVAL 59 DAY));

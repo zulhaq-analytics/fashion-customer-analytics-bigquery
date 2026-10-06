@@ -1,0 +1,5 @@
+defaultProject: fashion-cx
+defaultLocation: US
+defaultDataset: hm_marts
+defaultAssertionDataset: hm_assertions
+dataformCoreVersion: 3.0.52

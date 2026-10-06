@@ -1,0 +1,46 @@
+config {
+  type: "table",
+  schema: "hm_marts",
+  description: "Additive daily sales summary for Power BI import: units, scaled spend and order lines by date, product hierarchy (levels 1, 2, 4), channel, customer age band and price tier. Contains no distinct counts; customer counts come from agg_monthly_kpis.",
+  columns: {
+    purchase_date: "Date (joins to dim_date.date)",
+    index_group: "Product hierarchy level 1",
+    index_name: "Product hierarchy level 2",
+    product_group: "Product hierarchy level 4",
+    channel: "Store or Online",
+    age_band: "Customer age band",
+    price_tier: "Article price tier 1-5",
+    units: "Units sold (additive)",
+    sales_amount: "Scaled spend (additive; relative, not real currency)",
+    order_lines: "Order lines (additive)"
+  },
+  assertions: {
+    uniqueKey: ["purchase_date", "index_group", "index_name", "product_group", "channel", "age_band", "price_tier"],
+    nonNull: ["purchase_date", "index_group", "channel", "units", "sales_amount"]
+  }
+}
+
+SELECT
+  s.purchase_date,
+  p.hierarchy_level_1_index_group AS index_group,
+  p.hierarchy_level_2_index AS index_name,
+  p.hierarchy_level_4_product_group AS product_group,
+  s.channel,
+  c.age_band,
+  p.price_tier,
+  SUM(s.units) AS units,
+  ROUND(SUM(s.sales_amount), 6) AS sales_amount,
+  COUNT(*) AS order_lines
+FROM ${ref("fct_sales")} AS s
+JOIN ${ref("dim_product")} AS p
+  ON s.article_id = p.article_id
+JOIN ${ref("dim_customer")} AS c
+  ON s.customer_id = c.customer_id
+GROUP BY
+  s.purchase_date,
+  index_group,
+  index_name,
+  product_group,
+  s.channel,
+  c.age_band,
+  p.price_tier

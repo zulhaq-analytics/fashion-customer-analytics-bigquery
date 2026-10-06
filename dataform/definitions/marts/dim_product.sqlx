@@ -1,0 +1,78 @@
+config {
+  type: "table",
+  schema: "hm_marts",
+  description: "One row per article with a 5-level category hierarchy (index group > index > section > product group > product type) and a lifetime sales summary. Price tier 1 = cheapest 20% of sold articles by average price, 5 = most expensive 20%.",
+  columns: {
+    article_id: "Article identifier (primary key)",
+    product_code: "Style identifier (one style, many colors)",
+    hierarchy_level_1_index_group: "Level 1: Ladieswear, Menswear, Baby/Children, Sport, Divided",
+    hierarchy_level_2_index: "Level 2: index within the group",
+    hierarchy_level_3_section: "Level 3: section",
+    hierarchy_level_4_product_group: "Level 4: product group",
+    hierarchy_level_5_product_type: "Level 5: product type",
+    units_sold: "Total units sold in the data window",
+    buyers: "Distinct customers who bought the article",
+    avg_price: "Average scaled price per unit (relative, not real currency)",
+    price_tier: "1 (cheapest 20%) to 5 (most expensive 20%) among sold articles; null if never sold",
+    first_sale_date: "First sale in the data window",
+    last_sale_date: "Last sale in the data window",
+    has_sold: "Article sold at least once in the data window"
+  },
+  assertions: {
+    uniqueKey: ["article_id"],
+    nonNull: ["article_id", "product_code", "hierarchy_level_1_index_group"]
+  }
+}
+
+WITH articles AS (
+  SELECT * FROM ${ref("stg_articles")}
+),
+
+sales_summary AS (
+  SELECT
+    article_id,
+    COUNT(*) AS units_sold,
+    COUNT(DISTINCT customer_id) AS buyers,
+    AVG(price) AS avg_price,
+    MIN(purchase_date) AS first_sale_date,
+    MAX(purchase_date) AS last_sale_date
+  FROM ${ref("stg_transactions")}
+  GROUP BY article_id
+),
+
+tiered AS (
+  SELECT
+    article_id,
+    NTILE(5) OVER (ORDER BY avg_price) AS price_tier
+  FROM sales_summary
+)
+
+SELECT
+  a.article_id,
+  a.product_code,
+  a.product_name,
+  a.index_group AS hierarchy_level_1_index_group,
+  a.index_name AS hierarchy_level_2_index,
+  a.section AS hierarchy_level_3_section,
+  a.product_group AS hierarchy_level_4_product_group,
+  a.product_type AS hierarchy_level_5_product_type,
+  a.department_code,
+  a.department,
+  a.garment_group,
+  a.graphical_appearance,
+  a.color_group,
+  a.perceived_color_value,
+  a.perceived_color_master,
+  a.description,
+  COALESCE(s.units_sold, 0) AS units_sold,
+  COALESCE(s.buyers, 0) AS buyers,
+  ROUND(s.avg_price, 6) AS avg_price,
+  t.price_tier,
+  s.first_sale_date,
+  s.last_sale_date,
+  s.article_id IS NOT NULL AS has_sold
+FROM articles AS a
+LEFT JOIN sales_summary AS s
+  ON a.article_id = s.article_id
+LEFT JOIN tiered AS t
+  ON a.article_id = t.article_id

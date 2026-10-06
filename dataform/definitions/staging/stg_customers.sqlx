@@ -1,0 +1,57 @@
+config {
+  type: "view",
+  schema: "hm_staging",
+  description: "One row per H&M customer. Cleans raw customers: boolean flags, normalized labels, integer age and age band.",
+  columns: {
+    customer_id: "Hashed customer identifier (primary key)",
+    is_fashion_news_subscriber: "Customer receives fashion news (raw FN = 1)",
+    is_active: "Customer is active for communication (raw Active = 1)",
+    club_member_status: "ACTIVE, PRE-CREATE, LEFT CLUB or UNKNOWN",
+    fashion_news_frequency: "NONE, MONTHLY, REGULARLY or UNKNOWN",
+    age: "Customer age in years (null if missing)",
+    age_band: "Age grouped into bands for reporting",
+    postal_code: "Hashed postal code (null if missing or H&M's unknown-location placeholder)"
+  },
+  assertions: {
+    uniqueKey: ["customer_id"],
+    nonNull: ["customer_id"]
+  }
+}
+
+WITH source AS (
+  SELECT * FROM ${ref("customers")}
+),
+
+cleaned AS (
+  SELECT
+    customer_id,
+    COALESCE(SAFE_CAST(FN AS FLOAT64) = 1, FALSE) AS is_fashion_news_subscriber,
+    COALESCE(SAFE_CAST(Active AS FLOAT64) = 1, FALSE) AS is_active,
+    COALESCE(NULLIF(UPPER(TRIM(club_member_status)), ''), 'UNKNOWN') AS club_member_status,
+    COALESCE(NULLIF(UPPER(TRIM(fashion_news_frequency)), ''), 'UNKNOWN') AS fashion_news_frequency,
+    SAFE_CAST(SAFE_CAST(age AS FLOAT64) AS INT64) AS age,
+    CASE
+      WHEN TRIM(postal_code) IN ('', '2c29ae653a9282cce4151bd87643c907644e09541abc28ae87dea0d1f6603b1c') THEN NULL
+      ELSE TRIM(postal_code)
+    END AS postal_code
+  FROM source
+)
+
+SELECT
+  customer_id,
+  is_fashion_news_subscriber,
+  is_active,
+  club_member_status,
+  fashion_news_frequency,
+  age,
+  CASE
+    WHEN age IS NULL THEN 'Unknown'
+    WHEN age < 25 THEN '16-24'
+    WHEN age < 35 THEN '25-34'
+    WHEN age < 45 THEN '35-44'
+    WHEN age < 55 THEN '45-54'
+    WHEN age < 65 THEN '55-64'
+    ELSE '65+'
+  END AS age_band,
+  postal_code
+FROM cleaned
