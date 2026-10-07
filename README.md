@@ -4,7 +4,7 @@ I built this project to answer the questions a retailer asks about its customers
 
 I used two years of real H&M purchase data and built the full pipeline myself on Google Cloud, from raw files to two prediction models and a finished Power BI report.
 
-`BigQuery` · `Dataform` · `BigQuery ML` · `Power BI` · `SQL` · `DAX`
+`BigQuery` · `Dataform` · `BigQuery ML` · `Power BI` · `SQL` · `DAX` · `Claude (AI-assisted development)`
 
 **[▶ Open the live report](https://app.powerbi.com/view?r=eyJrIjoiNTM2ZjJiMWMtZjQwMy00NDgwLTg0ZjQtN2NiOWNkNTM4ZGJiIiwidCI6ImEyYjYxNTdiLWZlM2ItNGRlZi05OTAzLTc4YTRlMmU5NTNhYiJ9)** · [Download the PDF](report/hm_customer_lookbook.pdf)
 
