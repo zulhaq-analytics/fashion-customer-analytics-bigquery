@@ -1,0 +1,110 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "64323a2e348a4ebfcb12",
+  "position": {
+    "x": 912,
+    "y": 248,
+    "z": 15000,
+    "height": 370,
+    "width": 616,
+    "tabOrder": 15000
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "How it's built",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontSize": "18pt",
+                      "color": "#111111"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": " ",
+                    "textStyle": {
+                      "fontSize": "8pt",
+                      "color": "#3a3a3a"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "BigQuery stores the data, Dataform models and tests it every month, BigQuery ML predicts who will stop buying and what they'll spend, and Power BI tells the story.",
+                    "textStyle": {
+                      "fontSize": "14pt",
+                      "color": "#3a3a3a"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": " ",
+                    "textStyle": {
+                      "fontSize": "8pt",
+                      "color": "#3a3a3a"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Full build, SQL and model code:",
+                    "textStyle": {
+                      "fontSize": "14pt",
+                      "color": "#3a3a3a"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "github.com/zulhaq-analytics/fashion-customer-analytics-bigquery",
+                    "textStyle": {
+                      "fontSize": "14pt",
+                      "textDecoration": "underline",
+                      "color": "#3e5c76"
+                    },
+                    "url": "https://github.com/zulhaq-analytics/fashion-customer-analytics-bigquery"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

@@ -1,0 +1,48 @@
+config {
+  type: "view",
+  schema: "hm_marts",
+  description: "Report-ready customer table for Power BI import: one row per customer combining profile, lifetime summary, RFM segment and predictions. Deliberately excludes customer_id and postal_code: no visual needs them, they are the costliest columns to import, and the published report should not expose customer identifiers.",
+  columns: {
+    is_scored: "Customer was active in the last 365 days and has churn and value predictions",
+    rfm_segment: "RFM segment; 'No purchases' for customers who never bought",
+    churn_risk_band: "High, Medium, Low, or 'Not scored' for customers inactive in the last year",
+    spend_percentile: "1-100 rank of buyers by lifetime spend (1 = top 1%); null for customers who never bought"
+  }
+}
+
+SELECT
+  c.club_member_status,
+  c.fashion_news_frequency,
+  c.is_fashion_news_subscriber,
+  c.is_active,
+  c.age,
+  c.age_band,
+  c.cohort_month,
+  c.first_purchase_date,
+  c.last_purchase_date,
+  c.items_purchased,
+  c.orders,
+  c.total_spend,
+  c.channel_preference,
+  c.has_purchased,
+  CASE
+    WHEN c.has_purchased THEN NTILE(100) OVER (PARTITION BY c.has_purchased ORDER BY c.total_spend DESC)
+  END AS spend_percentile,
+  r.recency_days,
+  r.r_score,
+  r.f_score,
+  r.m_score,
+  COALESCE(r.rfm_segment, 'No purchases') AS rfm_segment,
+  COALESCE(r.segment_sort_order, 9) AS segment_sort_order,
+  p.customer_id IS NOT NULL AS is_scored,
+  p.churn_probability,
+  COALESCE(p.churn_risk_band, 'Not scored') AS churn_risk_band,
+  p.predicted_spend_next_90d,
+  p.quarterly_spend_at_stake,
+  p.value_at_risk,
+  p.value_at_risk_decile
+FROM ${ref("dim_customer")} AS c
+LEFT JOIN ${ref("customer_rfm_segments")} AS r
+  ON c.customer_id = r.customer_id
+LEFT JOIN ${ref("customer_predictions")} AS p
+  ON c.customer_id = p.customer_id

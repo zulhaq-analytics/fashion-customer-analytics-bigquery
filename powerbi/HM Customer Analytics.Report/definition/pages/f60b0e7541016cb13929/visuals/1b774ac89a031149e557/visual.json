@@ -1,0 +1,244 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "1b774ac89a031149e557",
+  "position": {
+    "x": 36,
+    "y": 634,
+    "z": 15000,
+    "height": 370,
+    "width": 860,
+    "tabOrder": 15000
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "Words used in this report",
+                    "textStyle": {
+                      "fontSize": "18pt",
+                      "color": "#111111",
+                      "fontWeight": "bold"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": " ",
+                    "textStyle": {
+                      "fontSize": "8pt",
+                      "color": "#3A3A3A"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Stopped buying.  ",
+                    "textStyle": {
+                      "fontSize": "14pt",
+                      "color": "#D7192D",
+                      "fontWeight": "bold"
+                    }
+                  },
+                  {
+                    "value": "No purchase in the 3 months after a given date.",
+                    "textStyle": {
+                      "fontSize": "14pt",
+                      "color": "#3A3A3A"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": " ",
+                    "textStyle": {
+                      "fontSize": "7pt",
+                      "color": "#3A3A3A"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Came back.  ",
+                    "textStyle": {
+                      "fontSize": "14pt",
+                      "color": "#D7192D",
+                      "fontWeight": "bold"
+                    }
+                  },
+                  {
+                    "value": "Bought again in a later month, counted from the month a customer first bought.",
+                    "textStyle": {
+                      "fontSize": "14pt",
+                      "color": "#3A3A3A"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": " ",
+                    "textStyle": {
+                      "fontSize": "7pt",
+                      "color": "#3A3A3A"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Best customers.  ",
+                    "textStyle": {
+                      "fontSize": "14pt",
+                      "color": "#D7192D",
+                      "fontWeight": "bold"
+                    }
+                  },
+                  {
+                    "value": "The 'Champions' group: bought recently, often, and spent the most. Groups use recency, frequency and spend scores of 1 to 5.",
+                    "textStyle": {
+                      "fontSize": "14pt",
+                      "color": "#3A3A3A"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": " ",
+                    "textStyle": {
+                      "fontSize": "7pt",
+                      "color": "#3A3A3A"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Sales at risk.  ",
+                    "textStyle": {
+                      "fontSize": "14pt",
+                      "color": "#D7192D",
+                      "fontWeight": "bold"
+                    }
+                  },
+                  {
+                    "value": "Chance of stopping × a quarter of the customer's spend over the past year.",
+                    "textStyle": {
+                      "fontSize": "14pt",
+                      "color": "#3A3A3A"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": " ",
+                    "textStyle": {
+                      "fontSize": "7pt",
+                      "color": "#3A3A3A"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Same season.  ",
+                    "textStyle": {
+                      "fontSize": "14pt",
+                      "color": "#D7192D",
+                      "fontWeight": "bold"
+                    }
+                  },
+                  {
+                    "value": "COVID months (Mar to Sep 2020) compared with the same months a year earlier, so seasons don't skew the comparison.",
+                    "textStyle": {
+                      "fontSize": "14pt",
+                      "color": "#3A3A3A"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": " ",
+                    "textStyle": {
+                      "fontSize": "7pt",
+                      "color": "#3A3A3A"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Price groups.  ",
+                    "textStyle": {
+                      "fontSize": "14pt",
+                      "color": "#D7192D",
+                      "fontWeight": "bold"
+                    }
+                  },
+                  {
+                    "value": "Products split into five equal bands by average price.",
+                    "textStyle": {
+                      "fontSize": "14pt",
+                      "color": "#3A3A3A"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": " ",
+                    "textStyle": {
+                      "fontSize": "7pt",
+                      "color": "#3A3A3A"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

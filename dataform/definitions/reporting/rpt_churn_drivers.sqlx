@@ -1,0 +1,41 @@
+config {
+  type: "view",
+  schema: "hm_marts",
+  description: "Observed 90-day churn by cutoff date, customer age band and customer group, for the Power BI churn page. Aggregated from churn_labels (score split excluded: its outcome is unknown).",
+  columns: {
+    age_band: "Customer age band (joins to the Power BI age filter)",
+    recency_band: "Days since last purchase at the cutoff, grouped",
+    orders_band: "Orders in the 365 days before the cutoff, grouped",
+    customers: "Active customers in the group at the cutoff",
+    churned_customers: "Of those, customers with no purchase in the next 90 days"
+  }
+}
+
+SELECT
+  cutoff_date,
+  data_split,
+  age_band,
+  club_member_status,
+  CASE
+    WHEN recency_days <= 30 THEN '1. 0-30 days'
+    WHEN recency_days <= 90 THEN '2. 31-90 days'
+    WHEN recency_days <= 180 THEN '3. 91-180 days'
+    ELSE '4. 181-365 days'
+  END AS recency_band,
+  CASE
+    WHEN orders_365d = 1 THEN '1. 1 order'
+    WHEN orders_365d <= 3 THEN '2. 2-3 orders'
+    WHEN orders_365d <= 9 THEN '3. 4-9 orders'
+    ELSE '4. 10+ orders'
+  END AS orders_band,
+  COUNT(*) AS customers,
+  COUNTIF(churned_90d) AS churned_customers
+FROM ${ref("churn_labels")}
+WHERE data_split != 'score'
+GROUP BY
+  cutoff_date,
+  data_split,
+  age_band,
+  club_member_status,
+  recency_band,
+  orders_band

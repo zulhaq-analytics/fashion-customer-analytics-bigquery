@@ -1,0 +1,184 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "4742ba586fd9c90a9d15",
+  "position": {
+    "x": 912,
+    "y": 634,
+    "z": 15000,
+    "height": 370,
+    "width": 616,
+    "tabOrder": 15000
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "Read with care",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontSize": "18pt",
+                      "color": "#111111"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": " ",
+                    "textStyle": {
+                      "fontSize": "8pt",
+                      "color": "#3a3a3a"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Club data.  ",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontSize": "14pt",
+                      "color": "#d7192d"
+                    }
+                  },
+                  {
+                    "value": "Members lean online (46% online only vs 19% store only), so this is not all H&M shoppers.",
+                    "textStyle": {
+                      "fontSize": "14pt",
+                      "color": "#3a3a3a"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": " ",
+                    "textStyle": {
+                      "fontSize": "7pt",
+                      "color": "#3a3a3a"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Early joiners.  ",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontSize": "14pt",
+                      "color": "#d7192d"
+                    }
+                  },
+                  {
+                    "value": "Customers who 'joined' before Mar 2019 include people who shopped before the data starts, so return rates for those months are left out.",
+                    "textStyle": {
+                      "fontSize": "14pt",
+                      "color": "#3a3a3a"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": " ",
+                    "textStyle": {
+                      "fontSize": "7pt",
+                      "color": "#3a3a3a"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "The model.  ",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontSize": "14pt",
+                      "color": "#d7192d"
+                    }
+                  },
+                  {
+                    "value": "Trained on Sep and Dec 2019, tested on unseen Jun 2020: right 73% of the time vs 56% by guessing; finds 82% of those who stop.",
+                    "textStyle": {
+                      "fontSize": "14pt",
+                      "color": "#3a3a3a"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": " ",
+                    "textStyle": {
+                      "fontSize": "7pt",
+                      "color": "#3a3a3a"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Actions.  ",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontSize": "14pt",
+                      "color": "#d7192d"
+                    }
+                  },
+                  {
+                    "value": "Suggested next steps are an analyst's view, not H&M policy.",
+                    "textStyle": {
+                      "fontSize": "14pt",
+                      "color": "#3a3a3a"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": " ",
+                    "textStyle": {
+                      "fontSize": "7pt",
+                      "color": "#3a3a3a"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

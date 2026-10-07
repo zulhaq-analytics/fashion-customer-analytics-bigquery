@@ -1,0 +1,205 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+  "name": "2fdbd8528a7819df7278",
+  "displayName": "Who's Worth Most",
+  "displayOption": "FitToPage",
+  "height": 1080,
+  "width": 1920,
+  "objects": {
+    "displayArea": [
+      {
+        "properties": {
+          "verticalAlignment": {
+            "expr": {
+              "Literal": {
+                "Value": "'Top'"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "visualInteractions": [
+    {
+      "source": "002dc2246fd4e042a5da",
+      "target": "813435b28ac41ba9ffa4",
+      "type": "NoFilter"
+    },
+    {
+      "source": "002dc2246fd4e042a5da",
+      "target": "b55bdcd1d8951f555470",
+      "type": "NoFilter"
+    },
+    {
+      "source": "002dc2246fd4e042a5da",
+      "target": "26a858f9348d93bb7988",
+      "type": "NoFilter"
+    },
+    {
+      "source": "002dc2246fd4e042a5da",
+      "target": "207acd558397dbec9763",
+      "type": "NoFilter"
+    },
+    {
+      "source": "002dc2246fd4e042a5da",
+      "target": "6090469425c802075a41",
+      "type": "NoFilter"
+    },
+    {
+      "source": "002dc2246fd4e042a5da",
+      "target": "e91200b02fe6c18691a1",
+      "type": "NoFilter"
+    },
+    {
+      "source": "002dc2246fd4e042a5da",
+      "target": "84d5bd4fb95654937443",
+      "type": "NoFilter"
+    },
+    {
+      "source": "002dc2246fd4e042a5da",
+      "target": "0ad71b800a1765b5c02a",
+      "type": "NoFilter"
+    },
+    {
+      "source": "002dc2246fd4e042a5da",
+      "target": "7200c7c6fdf5fd1e9c68",
+      "type": "NoFilter"
+    },
+    {
+      "source": "813435b28ac41ba9ffa4",
+      "target": "002dc2246fd4e042a5da",
+      "type": "NoFilter"
+    },
+    {
+      "source": "813435b28ac41ba9ffa4",
+      "target": "b55bdcd1d8951f555470",
+      "type": "NoFilter"
+    },
+    {
+      "source": "813435b28ac41ba9ffa4",
+      "target": "26a858f9348d93bb7988",
+      "type": "NoFilter"
+    },
+    {
+      "source": "813435b28ac41ba9ffa4",
+      "target": "207acd558397dbec9763",
+      "type": "NoFilter"
+    },
+    {
+      "source": "813435b28ac41ba9ffa4",
+      "target": "6090469425c802075a41",
+      "type": "NoFilter"
+    },
+    {
+      "source": "813435b28ac41ba9ffa4",
+      "target": "e91200b02fe6c18691a1",
+      "type": "NoFilter"
+    },
+    {
+      "source": "813435b28ac41ba9ffa4",
+      "target": "84d5bd4fb95654937443",
+      "type": "NoFilter"
+    },
+    {
+      "source": "813435b28ac41ba9ffa4",
+      "target": "0ad71b800a1765b5c02a",
+      "type": "NoFilter"
+    },
+    {
+      "source": "813435b28ac41ba9ffa4",
+      "target": "7200c7c6fdf5fd1e9c68",
+      "type": "NoFilter"
+    },
+    {
+      "source": "26a858f9348d93bb7988",
+      "target": "002dc2246fd4e042a5da",
+      "type": "NoFilter"
+    },
+    {
+      "source": "26a858f9348d93bb7988",
+      "target": "813435b28ac41ba9ffa4",
+      "type": "NoFilter"
+    },
+    {
+      "source": "26a858f9348d93bb7988",
+      "target": "b55bdcd1d8951f555470",
+      "type": "NoFilter"
+    },
+    {
+      "source": "26a858f9348d93bb7988",
+      "target": "207acd558397dbec9763",
+      "type": "NoFilter"
+    },
+    {
+      "source": "26a858f9348d93bb7988",
+      "target": "6090469425c802075a41",
+      "type": "NoFilter"
+    },
+    {
+      "source": "26a858f9348d93bb7988",
+      "target": "e91200b02fe6c18691a1",
+      "type": "NoFilter"
+    },
+    {
+      "source": "26a858f9348d93bb7988",
+      "target": "84d5bd4fb95654937443",
+      "type": "NoFilter"
+    },
+    {
+      "source": "26a858f9348d93bb7988",
+      "target": "0ad71b800a1765b5c02a",
+      "type": "NoFilter"
+    },
+    {
+      "source": "26a858f9348d93bb7988",
+      "target": "7200c7c6fdf5fd1e9c68",
+      "type": "NoFilter"
+    },
+    {
+      "source": "0ad71b800a1765b5c02a",
+      "target": "002dc2246fd4e042a5da",
+      "type": "NoFilter"
+    },
+    {
+      "source": "0ad71b800a1765b5c02a",
+      "target": "813435b28ac41ba9ffa4",
+      "type": "NoFilter"
+    },
+    {
+      "source": "0ad71b800a1765b5c02a",
+      "target": "b55bdcd1d8951f555470",
+      "type": "NoFilter"
+    },
+    {
+      "source": "0ad71b800a1765b5c02a",
+      "target": "26a858f9348d93bb7988",
+      "type": "NoFilter"
+    },
+    {
+      "source": "0ad71b800a1765b5c02a",
+      "target": "207acd558397dbec9763",
+      "type": "NoFilter"
+    },
+    {
+      "source": "0ad71b800a1765b5c02a",
+      "target": "6090469425c802075a41",
+      "type": "NoFilter"
+    },
+    {
+      "source": "0ad71b800a1765b5c02a",
+      "target": "e91200b02fe6c18691a1",
+      "type": "NoFilter"
+    },
+    {
+      "source": "0ad71b800a1765b5c02a",
+      "target": "84d5bd4fb95654937443",
+      "type": "NoFilter"
+    },
+    {
+      "source": "0ad71b800a1765b5c02a",
+      "target": "7200c7c6fdf5fd1e9c68",
+      "type": "NoFilter"
+    }
+  ]
+}

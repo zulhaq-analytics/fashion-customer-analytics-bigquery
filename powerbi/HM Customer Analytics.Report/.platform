@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "HM Customer Analytics"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "47891f91-d802-4a15-ad6f-bf66edc02251"
+  }
+}
