@@ -145,4 +145,4 @@ The raw data, the Power BI data cache and .pbix files are not in this repository
 
 *Data: H&M Personalized Fashion Recommendations, Kaggle, used for non-commercial purposes under the competition rules. This is my own independent analysis and is not linked to or approved by H&M.*
 
-**Muhammad Zia Ul Haq** · Senior BI & Insights Analyst · PL-300 certified
+**Muhammad Zia Ul Haq** · Senior Data Analyst
