@@ -6,6 +6,10 @@ I used two years of real H&M purchase data and built the full pipeline myself on
 
 `BigQuery` · `Dataform` · `BigQuery ML` · `Power BI` · `SQL` · `DAX`
 
+**[▶ Open the live report](https://app.powerbi.com/view?r=eyJrIjoiNTM2ZjJiMWMtZjQwMy00NDgwLTg0ZjQtN2NiOWNkNTM4ZGJiIiwidCI6ImEyYjYxNTdiLWZlM2ItNGRlZi05OTAzLTc4YTRlMmU5NTNhYiJ9)** · [Download the PDF](report/hm_customer_lookbook.pdf)
+
+![Who They Are](images/01-who-they-are.png)
+
 ---
 
 ## The project in numbers
@@ -76,6 +80,12 @@ Every headline, chart title and KPI line writes itself in DAX. When you pick an 
 
 The **Where to Act** page includes a simple what-if simulator: pick a save rate (10% to 50%) and it shows how many customers that keeps and how much quarterly sales it protects.
 
+![Who Comes Back](images/02-who-comes-back.png)
+![Who's Worth Most](images/03-whos-worth-most.png)
+![Who's Leaving](images/04-whos-leaving.png)
+![What They Buy](images/05-what-they-buy.png)
+![Where to Act](images/06-where-to-act.png)
+
 ---
 
 ## Problems I found in the data, and how I fixed them
@@ -126,8 +136,10 @@ The churn model is good at ranking customers by risk, which is what a retention 
 - `dataform/`: the Dataform project (sources, staging, marts, ML models, report views and tests)
 - `powerbi/`: the Power BI project (PBIP). Every page, visual and DAX measure is saved as readable text
 - `scripts/load_raw.ps1`: the one-time load of the Kaggle files into BigQuery
+- `report/hm_customer_lookbook.pdf`: the full report, all 7 pages
+- `images/`: report screenshots
 
-The raw data, the Power BI data cache and .pbix files are not in this repository. The competition rules don't allow the data to be shared.
+The raw data, the Power BI data cache and .pbix files are not in this repository. The competition rules don't allow the data to be shared. You can explore the live report through the link at the top, or read the PDF.
 
 ---
 
